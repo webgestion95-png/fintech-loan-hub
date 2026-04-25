@@ -3,20 +3,23 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: LoanFlow API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: users
+  - name: loans
+  - name: admin
+  - name: contracts
+  - name: wallet
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +27,564 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /me:
+    get:
+      operationId: getMe
+      tags: [users]
+      summary: Get current authenticated user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /loans:
+    get:
+      operationId: listMyLoans
+      tags: [loans]
+      summary: List my loan applications
+      responses:
+        "200":
+          description: Loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Loan"
+    post:
+      operationId: createLoan
+      tags: [loans]
+      summary: Submit a new loan application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLoanInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Loan"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /loans/{id}:
+    get:
+      operationId: getLoan
+      tags: [loans]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Loan detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /loans/{id}/upload-signed-contract:
+    post:
+      operationId: uploadSignedContract
+      tags: [contracts]
+      summary: User uploads the signed contract PDF (base64)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadFileInput"
+      responses:
+        "200":
+          description: Updated loan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Loan"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /loans/{id}/withdraw:
+    post:
+      operationId: withdrawFunds
+      tags: [wallet]
+      summary: Withdraw available loan funds (simulation)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WithdrawInput"
+      responses:
+        "200":
+          description: Updated loan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Loan"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /admin/loans:
+    get:
+      operationId: adminListLoans
+      tags: [admin]
+      summary: Admin - list all loan applications
+      responses:
+        "200":
+          description: Loans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminLoan"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /admin/loans/{id}:
+    get:
+      operationId: adminGetLoan
+      tags: [admin]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Loan detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoanDetail"
+
+  /admin/loans/{id}/decision:
+    patch:
+      operationId: adminDecideLoan
+      tags: [admin]
+      summary: Admin - accept or refuse a loan
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoanDecisionInput"
+      responses:
+        "200":
+          description: Updated loan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoan"
+
+  /admin/loans/{id}/advance:
+    post:
+      operationId: adminAdvanceStatus
+      tags: [admin]
+      summary: Admin - advance loan to next operational status (mark contract sent / start processing / release funds)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdvanceStatusInput"
+      responses:
+        "200":
+          description: Updated loan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLoan"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Admin - dashboard summary
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  /admin/activity:
+    get:
+      operationId: adminGetActivity
+      tags: [admin]
+      summary: Admin - recent activity log (emails + status changes)
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
+      required: [status]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    LoanStatus:
+      type: string
+      enum:
+        - EN_ATTENTE
+        - ACCEPTE
+        - REFUSE
+        - CONTRAT_ENVOYE
+        - CONTRAT_SIGNE
+        - EN_TRAITEMENT
+        - FONDS_DISPONIBLES
+    UserRole:
+      type: string
+      enum: [USER, ADMIN]
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: ["string", "null"]
+        role:
+          $ref: "#/components/schemas/UserRole"
+        walletBalance:
+          type: number
+        createdAt:
+          type: string
+      required: [id, email, fullName, role, walletBalance, createdAt]
+    UploadedDocument:
+      type: object
+      properties:
+        filename:
+          type: string
+        contentType:
+          type: string
+        dataBase64:
+          type: string
+      required: [filename, contentType, dataBase64]
+    UploadedDocumentRef:
+      type: object
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        contentType:
+          type: string
+        uploadedAt:
+          type: string
+      required: [id, filename, contentType, uploadedAt]
+    CreateLoanInput:
+      type: object
+      properties:
+        applicantName:
+          type: string
+          minLength: 2
+        applicantEmail:
+          type: string
+        amount:
+          type: number
+          minimum: 100
+        durationMonths:
+          type: integer
+          minimum: 3
+          maximum: 120
+        monthlyIncome:
+          type: number
+          minimum: 0
+        purpose:
+          type: ["string", "null"]
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/UploadedDocument"
+      required: [applicantName, applicantEmail, amount, durationMonths, monthlyIncome, documents]
+    Loan:
+      type: object
+      properties:
+        id:
+          type: string
+        applicantName:
+          type: string
+        applicantEmail:
+          type: string
+        amount:
+          type: number
+        durationMonths:
+          type: integer
+        monthlyIncome:
+          type: number
+        purpose:
+          type: ["string", "null"]
+        status:
+          $ref: "#/components/schemas/LoanStatus"
+        decisionAt:
+          type: ["string", "null"]
+        contractSignedAt:
+          type: ["string", "null"]
+        fundsAvailableAt:
+          type: ["string", "null"]
+        processingUntil:
+          type: ["string", "null"]
+        withdrawnAmount:
+          type: number
+        availableBalance:
+          type: number
+        adminNote:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
       required:
+        - id
+        - applicantName
+        - applicantEmail
+        - amount
+        - durationMonths
+        - monthlyIncome
+        - purpose
         - status
-
+        - decisionAt
+        - contractSignedAt
+        - fundsAvailableAt
+        - processingUntil
+        - withdrawnAmount
+        - availableBalance
+        - adminNote
+        - createdAt
+        - updatedAt
+    LoanDetail:
+      allOf:
+        - $ref: "#/components/schemas/Loan"
+        - type: object
+          properties:
+            documents:
+              type: array
+              items:
+                $ref: "#/components/schemas/UploadedDocumentRef"
+            generatedContract:
+              type: ["object", "null"]
+              properties:
+                id:
+                  type: string
+                filename:
+                  type: string
+                uploadedAt:
+                  type: string
+              required: [id, filename, uploadedAt]
+            signedContract:
+              type: ["object", "null"]
+              properties:
+                id:
+                  type: string
+                filename:
+                  type: string
+                uploadedAt:
+                  type: string
+              required: [id, filename, uploadedAt]
+            timeline:
+              type: array
+              items:
+                $ref: "#/components/schemas/TimelineEvent"
+          required: [documents, generatedContract, signedContract, timeline]
+    AdminLoan:
+      allOf:
+        - $ref: "#/components/schemas/Loan"
+        - type: object
+          properties:
+            userEmail:
+              type: string
+            userFullName:
+              type: ["string", "null"]
+          required: [userEmail, userFullName]
+    AdminLoanDetail:
+      allOf:
+        - $ref: "#/components/schemas/LoanDetail"
+        - type: object
+          properties:
+            userEmail:
+              type: string
+            userFullName:
+              type: ["string", "null"]
+          required: [userEmail, userFullName]
+    LoanDecisionInput:
+      type: object
+      properties:
+        decision:
+          type: string
+          enum: [ACCEPT, REFUSE]
+        adminNote:
+          type: ["string", "null"]
+      required: [decision]
+    AdvanceStatusInput:
+      type: object
+      properties:
+        action:
+          type: string
+          enum: [SEND_CONTRACT, START_PROCESSING, RELEASE_FUNDS]
+      required: [action]
+    UploadFileInput:
+      type: object
+      properties:
+        filename:
+          type: string
+        contentType:
+          type: string
+        dataBase64:
+          type: string
+      required: [filename, contentType, dataBase64]
+    WithdrawInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          minimum: 1
+      required: [amount]
+    TimelineEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+      required: [id, kind, message, createdAt]
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: string
+        loanId:
+          type: string
+        applicantName:
+          type: string
+        kind:
+          type: string
+        message:
+          type: string
+        createdAt:
+          type: string
+      required: [id, loanId, applicantName, kind, message, createdAt]
+    AdminStats:
+      type: object
+      properties:
+        totalLoans:
+          type: integer
+        pending:
+          type: integer
+        accepted:
+          type: integer
+        refused:
+          type: integer
+        contractSent:
+          type: integer
+        contractSigned:
+          type: integer
+        processing:
+          type: integer
+        fundsAvailable:
+          type: integer
+        totalAmountRequested:
+          type: number
+        totalAmountAccepted:
+          type: number
+        totalDisbursed:
+          type: number
+      required:
+        - totalLoans
+        - pending
+        - accepted
+        - refused
+        - contractSent
+        - contractSigned
+        - processing
+        - fundsAvailable
+        - totalAmountRequested
+        - totalAmountAccepted
+        - totalDisbursed
