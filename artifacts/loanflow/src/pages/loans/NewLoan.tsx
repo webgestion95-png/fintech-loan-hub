@@ -6,8 +6,9 @@ import { z } from "zod";
 import { useGetMe, useCreateLoan, getListMyLoansQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -206,13 +207,11 @@ export function NewLoan() {
                     )}
                   />
 
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input value={user?.email || ""} disabled className="bg-muted" />
-                    </FormControl>
-                    <FormDescription>Lié à votre compte sécurisé.</FormDescription>
-                  </FormItem>
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input value={user?.email || ""} disabled className="bg-muted" />
+                    <p className="text-sm text-muted-foreground">Lié à votre compte sécurisé.</p>
+                  </div>
 
                   <FormField
                     control={form.control}
