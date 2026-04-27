@@ -61,6 +61,56 @@ router.get("/admin/stats", requireAdmin, async (_req, res): Promise<void> => {
   });
 });
 
+router.get("/admin/documents", requireAdmin, async (_req, res): Promise<void> => {
+  const rows = await db
+    .select({
+      doc: loanDocumentsTable,
+      loan: loansTable,
+      user: usersTable,
+    })
+    .from(loanDocumentsTable)
+    .leftJoin(loansTable, eq(loanDocumentsTable.loanId, loansTable.id))
+    .leftJoin(usersTable, eq(loansTable.userId, usersTable.id))
+    .orderBy(desc(loanDocumentsTable.uploadedAt));
+  res.json(
+    rows.map((r) => ({
+      id: r.doc.id,
+      loanId: r.doc.loanId,
+      filename: r.doc.filename,
+      contentType: r.doc.contentType,
+      uploadedAt: r.doc.uploadedAt.toISOString(),
+      sizeBytes: Math.ceil((r.doc.dataBase64.length * 3) / 4),
+      applicantName: r.loan?.applicantName ?? "—",
+      applicantEmail: r.loan?.applicantEmail ?? "—",
+      userFullName: r.user?.fullName ?? null,
+      userEmail: r.user?.email ?? null,
+      loanAmount: r.loan ? Number(r.loan.amount) : 0,
+      loanStatus: r.loan?.status ?? "EN_ATTENTE",
+    })),
+  );
+});
+
+router.get("/admin/audit-log", requireAdmin, async (_req, res): Promise<void> => {
+  const { adminAuditLogTable } = await import("@workspace/db");
+  const rows = await db
+    .select()
+    .from(adminAuditLogTable)
+    .orderBy(desc(adminAuditLogTable.createdAt))
+    .limit(100);
+  res.json(
+    rows.map((r) => ({
+      id: r.id,
+      email: r.email,
+      action: r.action,
+      success: r.success === "true",
+      ipAddress: r.ipAddress,
+      userAgent: r.userAgent,
+      details: r.details,
+      createdAt: r.createdAt.toISOString(),
+    })),
+  );
+});
+
 router.get("/admin/activity", requireAdmin, async (_req, res): Promise<void> => {
   const rows = await db
     .select({ event: timelineEventsTable, loan: loansTable })
@@ -185,7 +235,7 @@ router.patch(
       await db.insert(timelineEventsTable).values({
         loanId: row.loan.id,
         kind: "REFUSED",
-        message: "Demande refusée par l'équipe",
+        message: "Demande non retenue après étude du dossier",
       });
       const mail = EMAIL_TEMPLATES.refused(row.loan.applicantName, body.data.adminNote ?? null);
       await sendEmail({ to: row.loan.applicantEmail, ...mail, kind: "REFUSED" });
@@ -209,7 +259,7 @@ router.patch(
     await db.insert(timelineEventsTable).values({
       loanId: row.loan.id,
       kind: "ACCEPTED",
-      message: "Demande acceptée par l'équipe",
+      message: "Accord de principe — votre dossier est validé",
     });
     const mail = EMAIL_TEMPLATES.accepted(
       row.loan.applicantName,
@@ -275,7 +325,7 @@ router.post(
       await db.insert(timelineEventsTable).values({
         loanId: loan.id,
         kind: "CONTRACT_SENT",
-        message: "Contrat généré et envoyé à l'emprunteur",
+        message: "Contrat de prêt mis à votre disposition pour signature",
       });
       const contractMail = EMAIL_TEMPLATES.contractSent(loan.applicantName);
       await sendEmail({
@@ -313,7 +363,7 @@ router.post(
       await db.insert(timelineEventsTable).values({
         loanId: loan.id,
         kind: "PROCESSING",
-        message: "Traitement du dossier démarré (72h)",
+        message: "Validation finale en cours — délai estimé 72h",
       });
       const mail = EMAIL_TEMPLATES.processing(loan.applicantName);
       await sendEmail({ to: loan.applicantEmail, ...mail, kind: "PROCESSING" });
@@ -338,7 +388,7 @@ router.post(
       await db.insert(timelineEventsTable).values({
         loanId: loan.id,
         kind: "FUNDS_AVAILABLE",
-        message: "Fonds débloqués manuellement par l'équipe",
+        message: "Fonds disponibles pour retrait sur votre compte",
       });
       const mail = EMAIL_TEMPLATES.fundsAvailable(loan.applicantName, Number(loan.amount));
       await sendEmail({ to: loan.applicantEmail, ...mail, kind: "FUNDS_AVAILABLE" });

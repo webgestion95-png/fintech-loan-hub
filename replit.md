@@ -27,10 +27,15 @@ Plateforme MVP de gestion de prêts en ligne (UI 100% en français). Inspirée d
 6. `FONDS_DISPONIBLES` — débloqué automatiquement quand `processingUntil < now` (vérifié à chaque lecture utilisateur ou liste admin), ou manuellement via le bouton admin "Débloquer maintenant"
 7. Wallet : `availableBalance = amount - withdrawnAmount`, retraits via `POST /api/loans/:id/withdraw`
 
-## Bootstrap admin
+## Bootstrap admin + 2FA
 - Variable `ADMIN_EMAILS` (CSV d'emails) dans secrets — quand un user signe avec un de ces emails, son `role` est mis à `ADMIN` à la création
 - Alternative : Clerk `publicMetadata.role = "ADMIN"`
 - Le rôle est persisté dans la table `users` à la première connexion
+- **2FA TOTP obligatoire** pour tout email présent dans `ADMIN_EMAILS` (ex. `webgestion95@gmail.com`)
+  - Tables : `admin_two_factor` (secret + enabledAt), `admin_audit_log` (toutes les actions admin)
+  - `requireAdmin` middleware bloque tout `/admin/*` sans cookie `lf_admin_mfa` valide (HMAC SESSION_SECRET, TTL 8h)
+  - Routes `/admin/2fa/{status,setup,enable,verify,logout}`
+  - Frontend : `<AdminGate>` affiche `SetupTwoFactor` (QR + code) ou `VerifyTwoFactor` (saisie code) avant le contenu admin
 
 ## Emails
 - `lib/email.ts` envoie via Resend si `RESEND_API_KEY` est défini, sinon log structuré (mode simulé)
@@ -47,17 +52,25 @@ User :
 - `GET /loans/:loanId/documents/:docId` — stream pièce jointe
 - `GET /loans/:loanId/signed-contract` — stream PDF signé
 
-Admin :
+Admin (tous gardés par `requireAdmin` qui enforce 2FA si email ∈ ADMIN_EMAILS) :
 - `GET /admin/loans`, `GET /admin/loans/:id`, `GET /admin/stats`, `GET /admin/activity`
+- `GET /admin/documents` — liste de tous les documents (joins loans + users)
+- `GET /admin/audit-log` — 100 dernières actions admin (sécurité)
 - `PATCH /admin/loans/:id/decision` — `{ decision: ACCEPT|REFUSE, adminNote? }`
 - `POST /admin/loans/:id/advance` — `{ action: SEND_CONTRACT|START_PROCESSING|RELEASE_FUNDS }`
+- `GET/POST /admin/2fa/{status,setup,enable,verify,logout}` (gardés par `requireAdminPreMfa`)
 
 ## Frontend (routes wouter, basées sur `BASE_URL`)
-- `/` landing (signed-out) ou dashboard utilisateur (signed-in)
+- `/` landing (signed-out) → redirige `/admin` si ADMIN, sinon `/loans`
 - `/sign-in/*?` `/sign-up/*?` — pages Clerk customisées (theme shadcn + localisation FR)
-- `/loans` — mes prêts ; `/loans/new` — formulaire ; `/loans/:id` — détail
-- `/admin`, `/admin/loans`, `/admin/loans/:id` (gating role===ADMIN, sinon "Accès refusé")
+- **Espace utilisateur** (Layout clair) : `/loans` mes prêts ; `/loans/new` formulaire ; `/loans/:id` détail
+  - `<UserOnlyRoute>` redirige les ADMIN vers `/admin` (séparation stricte des espaces)
+- **Espace admin** (Layout sombre dédié `<AdminLayout>` + `<AdminGate>` 2FA) :
+  - `/admin` tableau de bord ; `/admin/loans` liste ; `/admin/loans/:id` détail
+  - `/admin/documents` table pro de tous les documents (preview modal + téléchargement)
+  - `/admin/audit` journal de sécurité
 - 404 français
+- Libellés client (banking terms) : "Étude du dossier", "Accord de principe", "Contrat reçu", "Validation finale (72h)", "Fonds disponibles" — voir `lib/status.tsx` + `lib/utils.ts`
 
 ## Theme
 - Palette : pine/teal profond (couleur signature) + neutres chauds

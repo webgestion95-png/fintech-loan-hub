@@ -529,3 +529,87 @@ export const AdminGetActivityResponseItem = zod.object({
   createdAt: zod.string(),
 });
 export const AdminGetActivityResponse = zod.array(AdminGetActivityResponseItem);
+
+/**
+ * @summary Admin - list all uploaded documents across loans
+ */
+export const AdminListAllDocumentsResponseItem = zod.object({
+  id: zod.string(),
+  loanId: zod.string(),
+  filename: zod.string(),
+  contentType: zod.string(),
+  uploadedAt: zod.string(),
+  sizeBytes: zod.number(),
+  applicantName: zod.string(),
+  applicantEmail: zod.string(),
+  userFullName: zod.string().nullish(),
+  userEmail: zod.string().nullish(),
+  loanAmount: zod.number(),
+  loanStatus: zod.string(),
+});
+export const AdminListAllDocumentsResponse = zod.array(
+  AdminListAllDocumentsResponseItem,
+);
+
+/**
+ * @summary Admin - security audit log (last 100 entries)
+ */
+export const AdminGetAuditLogResponseItem = zod.object({
+  id: zod.string(),
+  email: zod.string().nullish(),
+  action: zod.string(),
+  success: zod.boolean(),
+  ipAddress: zod.string().nullish(),
+  userAgent: zod.string().nullish(),
+  details: zod.string().nullish(),
+  createdAt: zod.string(),
+});
+export const AdminGetAuditLogResponse = zod.array(AdminGetAuditLogResponseItem);
+
+/**
+ * @summary Admin - check 2FA enrollment + verification state
+ */
+export const AdminGetTwoFactorStatusResponse = zod.object({
+  required: zod.boolean(),
+  enabled: zod.boolean(),
+  verified: zod.boolean(),
+  expiresAt: zod.string().nullish(),
+});
+
+/**
+ * @summary Admin - generate a new TOTP secret + QR code
+ */
+export const AdminSetupTwoFactorResponse = zod.object({
+  otpauth: zod.string(),
+  qrCodeDataUrl: zod.string(),
+  secret: zod.string(),
+});
+
+/**
+ * @summary Admin - confirm TOTP code and enable 2FA
+ */
+export const AdminEnableTwoFactorBody = zod.object({
+  code: zod.string(),
+});
+
+export const AdminEnableTwoFactorResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Admin - verify TOTP code and refresh 2FA session
+ */
+export const AdminVerifyTwoFactorBody = zod.object({
+  code: zod.string(),
+});
+
+export const AdminVerifyTwoFactorResponse = zod.object({
+  success: zod.boolean(),
+});
+
+/**
+ * @summary Admin - clear 2FA cookie
+ */
+export const AdminTwoFactorLogoutResponse = zod.object({
+  success: zod.boolean(),
+});

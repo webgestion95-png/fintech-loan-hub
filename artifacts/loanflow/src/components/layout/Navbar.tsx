@@ -27,19 +27,16 @@ export function Navbar() {
           </Link>
 
           <Show when="signed-in">
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
-              <Link href="/loans" className={`transition-colors hover:text-foreground/80 ${location === "/loans" ? "text-foreground" : "text-foreground/60"}`}>
-                Mes prêts
-              </Link>
-              <Link href="/loans/new" className={`transition-colors hover:text-foreground/80 ${location === "/loans/new" ? "text-foreground" : "text-foreground/60"}`}>
-                Demander un prêt
-              </Link>
-              {user?.role === "ADMIN" && (
-                <Link href="/admin" className={`transition-colors hover:text-foreground/80 ${location.startsWith("/admin") ? "text-foreground" : "text-foreground/60"}`}>
-                  Admin
+            {user?.role !== "ADMIN" && (
+              <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
+                <Link href="/loans" className={`transition-colors hover:text-foreground/80 ${location === "/loans" ? "text-foreground" : "text-foreground/60"}`}>
+                  Mes prêts
                 </Link>
-              )}
-            </nav>
+                <Link href="/loans/new" className={`transition-colors hover:text-foreground/80 ${location === "/loans/new" ? "text-foreground" : "text-foreground/60"}`}>
+                  Demander un prêt
+                </Link>
+              </nav>
+            )}
           </Show>
         </div>
 

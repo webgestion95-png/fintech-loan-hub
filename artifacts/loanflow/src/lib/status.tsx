@@ -66,55 +66,55 @@ export const LOAN_STATUS: Record<
   { label: string; tone: StatusTone; icon: LucideIcon; description: string }
 > = {
   EN_ATTENTE: {
-    label: "En attente",
+    label: "Étude du dossier",
     tone: "warning",
     icon: Hourglass,
-    description: "Votre demande est en cours d'examen",
+    description: "Votre demande est en cours d'analyse par nos services",
   },
   ACCEPTE: {
-    label: "Acceptée",
+    label: "Accord de principe",
     tone: "success",
     icon: CheckCircle2,
-    description: "Votre demande a été acceptée",
+    description: "Votre dossier a reçu un accord de principe",
   },
   REFUSE: {
-    label: "Refusée",
+    label: "Demande refusée",
     tone: "danger",
     icon: XCircle,
-    description: "Demande non aboutie",
+    description: "Demande non retenue après étude",
   },
   CONTRAT_ENVOYE: {
-    label: "Contrat envoyé",
+    label: "Contrat reçu",
     tone: "info",
     icon: Send,
-    description: "Le contrat vous a été envoyé pour signature",
+    description: "Votre contrat de prêt est disponible pour signature",
   },
   CONTRAT_SIGNE: {
     label: "Contrat signé",
     tone: "primary",
     icon: FileCheck2,
-    description: "Contrat signé reçu, déblocage en préparation",
+    description: "Contrat signé enregistré — préparation du déblocage",
   },
   EN_TRAITEMENT: {
-    label: "En traitement",
+    label: "Validation finale",
     tone: "warning",
     icon: Loader2,
-    description: "Mise à disposition des fonds sous 72h",
+    description: "Validation finale en cours — délai estimé 72h",
   },
   FONDS_DISPONIBLES: {
     label: "Fonds disponibles",
     tone: "success",
     icon: Wallet,
-    description: "Vos fonds sont disponibles",
+    description: "Vos fonds sont disponibles pour retrait",
   },
 };
 
 export const LOAN_STEPS: Array<{ id: LoanStatus; label: string; icon: LucideIcon }> = [
   { id: "EN_ATTENTE", label: "Demande déposée", icon: FileSignature },
-  { id: "ACCEPTE", label: "Acceptée", icon: CheckCircle2 },
-  { id: "CONTRAT_ENVOYE", label: "Contrat envoyé", icon: Send },
+  { id: "ACCEPTE", label: "Accord de principe", icon: CheckCircle2 },
+  { id: "CONTRAT_ENVOYE", label: "Contrat reçu", icon: Send },
   { id: "CONTRAT_SIGNE", label: "Contrat signé", icon: FileCheck2 },
-  { id: "EN_TRAITEMENT", label: "En traitement", icon: Clock },
+  { id: "EN_TRAITEMENT", label: "Validation finale", icon: Clock },
   { id: "FONDS_DISPONIBLES", label: "Fonds disponibles", icon: Wallet },
 ];
 

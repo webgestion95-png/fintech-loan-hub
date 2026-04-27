@@ -26,12 +26,12 @@ export function formatDateTime(dateStr: string) {
 }
 
 export const statusMap: Record<string, { label: string; color: string }> = {
-  EN_ATTENTE: { label: "En attente", color: "bg-amber-50 text-amber-800 border-amber-200" },
-  ACCEPTE: { label: "Acceptée", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  REFUSE: { label: "Refusée", color: "bg-rose-50 text-rose-700 border-rose-200" },
-  CONTRAT_ENVOYE: { label: "Contrat envoyé", color: "bg-sky-50 text-sky-700 border-sky-200" },
+  EN_ATTENTE: { label: "Étude du dossier", color: "bg-amber-50 text-amber-800 border-amber-200" },
+  ACCEPTE: { label: "Accord de principe", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  REFUSE: { label: "Demande refusée", color: "bg-rose-50 text-rose-700 border-rose-200" },
+  CONTRAT_ENVOYE: { label: "Contrat reçu", color: "bg-sky-50 text-sky-700 border-sky-200" },
   CONTRAT_SIGNE: { label: "Contrat signé", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-  EN_TRAITEMENT: { label: "En traitement (72h)", color: "bg-amber-50 text-amber-800 border-amber-200" },
+  EN_TRAITEMENT: { label: "Validation finale (72h)", color: "bg-amber-50 text-amber-800 border-amber-200" },
   FONDS_DISPONIBLES: { label: "Fonds disponibles", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 };
 

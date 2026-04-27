@@ -68,13 +68,18 @@ import { LoanDetail } from "@/pages/loans/LoanDetail";
 import { AdminDashboard } from "@/pages/admin/AdminDashboard";
 import { AdminLoanList } from "@/pages/admin/AdminLoanList";
 import { AdminLoanDetail } from "@/pages/admin/AdminLoanDetail";
+import { AdminDocuments } from "@/pages/admin/AdminDocuments";
+import { AdminAuditLog } from "@/pages/admin/AdminAuditLog";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { AdminGate } from "@/components/admin/AdminGate";
 import { ForbiddenPage } from "@/pages/ForbiddenPage";
+import { useGetMe } from "@workspace/api-client-react";
 
 function HomeRedirect() {
   return (
     <>
       <Show when="signed-in">
-        <Redirect to="/loans" />
+        <SignedInHomeRedirect />
       </Show>
       <Show when="signed-out">
         <Layout>
@@ -82,6 +87,28 @@ function HomeRedirect() {
         </Layout>
       </Show>
     </>
+  );
+}
+
+function SignedInHomeRedirect() {
+  const { data: user, isLoading } = useGetMe();
+  if (isLoading) return null;
+  if (user?.role === "ADMIN") return <Redirect to="/admin" />;
+  return <Redirect to="/loans" />;
+}
+
+function UserOnlyRoute({ children }: { children: React.ReactNode }) {
+  const { data: user, isLoading } = useGetMe();
+  if (isLoading) return null;
+  if (user?.role === "ADMIN") return <Redirect to="/admin" />;
+  return <>{children}</>;
+}
+
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminLayout>
+      <AdminGate>{children}</AdminGate>
+    </AdminLayout>
   );
 }
 
@@ -144,23 +171,29 @@ function ClerkProviderWithRoutes() {
           <Route path="/sign-up/*?" component={SignUpPage} />
           
           <Route path="/loans">
-            <Layout><UserDashboard /></Layout>
+            <Layout><UserOnlyRoute><UserDashboard /></UserOnlyRoute></Layout>
           </Route>
           <Route path="/loans/new">
-            <Layout><NewLoan /></Layout>
+            <Layout><UserOnlyRoute><NewLoan /></UserOnlyRoute></Layout>
           </Route>
           <Route path="/loans/:id">
-            <Layout><LoanDetail /></Layout>
+            <Layout><UserOnlyRoute><LoanDetail /></UserOnlyRoute></Layout>
           </Route>
 
           <Route path="/admin">
-            <Layout><AdminDashboard /></Layout>
+            <AdminRoute><AdminDashboard /></AdminRoute>
           </Route>
           <Route path="/admin/loans">
-            <Layout><AdminLoanList /></Layout>
+            <AdminRoute><AdminLoanList /></AdminRoute>
           </Route>
           <Route path="/admin/loans/:id">
-            <Layout><AdminLoanDetail /></Layout>
+            <AdminRoute><AdminLoanDetail /></AdminRoute>
+          </Route>
+          <Route path="/admin/documents">
+            <AdminRoute><AdminDocuments /></AdminRoute>
+          </Route>
+          <Route path="/admin/audit">
+            <AdminRoute><AdminAuditLog /></AdminRoute>
           </Route>
 
           <Route path="/403">

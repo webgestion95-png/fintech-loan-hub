@@ -87,8 +87,8 @@ export function LoanDetail() {
             onSuccess: () => {
               queryClient.invalidateQueries({ queryKey: getGetLoanQueryKey(id) });
               toast({
-                title: "Contrat envoyé",
-                description: "Votre contrat signé a été reçu.",
+                title: "Contrat signé enregistré",
+                description: "Votre contrat signé a bien été reçu.",
               });
             },
             onError: () => {

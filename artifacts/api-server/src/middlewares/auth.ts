@@ -1,7 +1,13 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { getAuth, clerkClient } from "@clerk/express";
 import { eq } from "drizzle-orm";
-import { db, usersTable, type User } from "@workspace/db";
+import {
+  db,
+  usersTable,
+  adminTwoFactorTable,
+  type User,
+} from "@workspace/db";
+import { readMfaCookie, isAdminEmailRequiringMfa } from "../lib/admin2fa";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -91,6 +97,55 @@ export async function requireAuth(
 }
 
 export async function requireAdmin(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  await requireAuth(req, res, async () => {
+    const user = req.currentUser;
+    if (user?.role !== "ADMIN") {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    // 2FA enforcement for admin emails (e.g. webgestion95@gmail.com)
+    if (isAdminEmailRequiringMfa(user.email)) {
+      const setup = (
+        await db
+          .select()
+          .from(adminTwoFactorTable)
+          .where(eq(adminTwoFactorTable.userId, user.id))
+      )[0];
+
+      const hasEnabled2fa = !!setup?.enabledAt;
+      const cookie = readMfaCookie(req);
+      const cookieValid = !!cookie && cookie.userId === user.id;
+
+      if (!hasEnabled2fa) {
+        res.status(403).json({
+          error: "MFA_SETUP_REQUIRED",
+          message: "Configuration de la double authentification requise.",
+        });
+        return;
+      }
+      if (!cookieValid) {
+        res.status(403).json({
+          error: "MFA_VERIFICATION_REQUIRED",
+          message: "Vérification 2FA requise.",
+        });
+        return;
+      }
+    }
+
+    next();
+  });
+}
+
+/**
+ * Allows authenticated admins to access 2FA setup/verify endpoints
+ * even when MFA cookie is not set yet.
+ */
+export async function requireAdminPreMfa(
   req: Request,
   res: Response,
   next: NextFunction,

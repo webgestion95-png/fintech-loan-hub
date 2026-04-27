@@ -18,10 +18,12 @@ import type {
 
 import type {
   ActivityItem,
+  AdminDocumentItem,
   AdminLoan,
   AdminLoanDetail,
   AdminStats,
   AdvanceStatusInput,
+  AuditLogItem,
   BadRequestResponse,
   CreateLoanInput,
   ForbiddenResponse,
@@ -30,6 +32,10 @@ import type {
   LoanDecisionInput,
   LoanDetail,
   NotFoundResponse,
+  SuccessResponse,
+  TwoFactorSetup,
+  TwoFactorStatus,
+  TwoFactorVerifyBody,
   UnauthorizedResponse,
   UploadFileInput,
   UserProfile,
@@ -1142,3 +1148,563 @@ export function useAdminGetActivity<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Admin - list all uploaded documents across loans
+ */
+export const getAdminListAllDocumentsUrl = () => {
+  return `/api/admin/documents`;
+};
+
+export const adminListAllDocuments = async (
+  options?: RequestInit,
+): Promise<AdminDocumentItem[]> => {
+  return customFetch<AdminDocumentItem[]>(getAdminListAllDocumentsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminListAllDocumentsQueryKey = () => {
+  return [`/api/admin/documents`] as const;
+};
+
+export const getAdminListAllDocumentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminListAllDocuments>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminListAllDocuments>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminListAllDocumentsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminListAllDocuments>>
+  > = ({ signal }) => adminListAllDocuments({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminListAllDocuments>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminListAllDocumentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminListAllDocuments>>
+>;
+export type AdminListAllDocumentsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - list all uploaded documents across loans
+ */
+
+export function useAdminListAllDocuments<
+  TData = Awaited<ReturnType<typeof adminListAllDocuments>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminListAllDocuments>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminListAllDocumentsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Admin - security audit log (last 100 entries)
+ */
+export const getAdminGetAuditLogUrl = () => {
+  return `/api/admin/audit-log`;
+};
+
+export const adminGetAuditLog = async (
+  options?: RequestInit,
+): Promise<AuditLogItem[]> => {
+  return customFetch<AuditLogItem[]>(getAdminGetAuditLogUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminGetAuditLogQueryKey = () => {
+  return [`/api/admin/audit-log`] as const;
+};
+
+export const getAdminGetAuditLogQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminGetAuditLog>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminGetAuditLog>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminGetAuditLogQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminGetAuditLog>>
+  > = ({ signal }) => adminGetAuditLog({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminGetAuditLog>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminGetAuditLogQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminGetAuditLog>>
+>;
+export type AdminGetAuditLogQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - security audit log (last 100 entries)
+ */
+
+export function useAdminGetAuditLog<
+  TData = Awaited<ReturnType<typeof adminGetAuditLog>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminGetAuditLog>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminGetAuditLogQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Admin - check 2FA enrollment + verification state
+ */
+export const getAdminGetTwoFactorStatusUrl = () => {
+  return `/api/admin/2fa/status`;
+};
+
+export const adminGetTwoFactorStatus = async (
+  options?: RequestInit,
+): Promise<TwoFactorStatus> => {
+  return customFetch<TwoFactorStatus>(getAdminGetTwoFactorStatusUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminGetTwoFactorStatusQueryKey = () => {
+  return [`/api/admin/2fa/status`] as const;
+};
+
+export const getAdminGetTwoFactorStatusQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminGetTwoFactorStatus>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminGetTwoFactorStatus>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminGetTwoFactorStatusQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminGetTwoFactorStatus>>
+  > = ({ signal }) => adminGetTwoFactorStatus({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminGetTwoFactorStatus>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminGetTwoFactorStatusQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminGetTwoFactorStatus>>
+>;
+export type AdminGetTwoFactorStatusQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - check 2FA enrollment + verification state
+ */
+
+export function useAdminGetTwoFactorStatus<
+  TData = Awaited<ReturnType<typeof adminGetTwoFactorStatus>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminGetTwoFactorStatus>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminGetTwoFactorStatusQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Admin - generate a new TOTP secret + QR code
+ */
+export const getAdminSetupTwoFactorUrl = () => {
+  return `/api/admin/2fa/setup`;
+};
+
+export const adminSetupTwoFactor = async (
+  options?: RequestInit,
+): Promise<TwoFactorSetup> => {
+  return customFetch<TwoFactorSetup>(getAdminSetupTwoFactorUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAdminSetupTwoFactorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSetupTwoFactor>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminSetupTwoFactor>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["adminSetupTwoFactor"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminSetupTwoFactor>>,
+    void
+  > = () => {
+    return adminSetupTwoFactor(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminSetupTwoFactorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminSetupTwoFactor>>
+>;
+
+export type AdminSetupTwoFactorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - generate a new TOTP secret + QR code
+ */
+export const useAdminSetupTwoFactor = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminSetupTwoFactor>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminSetupTwoFactor>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAdminSetupTwoFactorMutationOptions(options));
+};
+
+/**
+ * @summary Admin - confirm TOTP code and enable 2FA
+ */
+export const getAdminEnableTwoFactorUrl = () => {
+  return `/api/admin/2fa/enable`;
+};
+
+export const adminEnableTwoFactor = async (
+  twoFactorVerifyBody: TwoFactorVerifyBody,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getAdminEnableTwoFactorUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(twoFactorVerifyBody),
+  });
+};
+
+export const getAdminEnableTwoFactorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminEnableTwoFactor>>,
+    TError,
+    { data: BodyType<TwoFactorVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminEnableTwoFactor>>,
+  TError,
+  { data: BodyType<TwoFactorVerifyBody> },
+  TContext
+> => {
+  const mutationKey = ["adminEnableTwoFactor"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminEnableTwoFactor>>,
+    { data: BodyType<TwoFactorVerifyBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminEnableTwoFactor(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminEnableTwoFactorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminEnableTwoFactor>>
+>;
+export type AdminEnableTwoFactorMutationBody = BodyType<TwoFactorVerifyBody>;
+export type AdminEnableTwoFactorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - confirm TOTP code and enable 2FA
+ */
+export const useAdminEnableTwoFactor = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminEnableTwoFactor>>,
+    TError,
+    { data: BodyType<TwoFactorVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminEnableTwoFactor>>,
+  TError,
+  { data: BodyType<TwoFactorVerifyBody> },
+  TContext
+> => {
+  return useMutation(getAdminEnableTwoFactorMutationOptions(options));
+};
+
+/**
+ * @summary Admin - verify TOTP code and refresh 2FA session
+ */
+export const getAdminVerifyTwoFactorUrl = () => {
+  return `/api/admin/2fa/verify`;
+};
+
+export const adminVerifyTwoFactor = async (
+  twoFactorVerifyBody: TwoFactorVerifyBody,
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getAdminVerifyTwoFactorUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(twoFactorVerifyBody),
+  });
+};
+
+export const getAdminVerifyTwoFactorMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminVerifyTwoFactor>>,
+    TError,
+    { data: BodyType<TwoFactorVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminVerifyTwoFactor>>,
+  TError,
+  { data: BodyType<TwoFactorVerifyBody> },
+  TContext
+> => {
+  const mutationKey = ["adminVerifyTwoFactor"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminVerifyTwoFactor>>,
+    { data: BodyType<TwoFactorVerifyBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminVerifyTwoFactor(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminVerifyTwoFactorMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminVerifyTwoFactor>>
+>;
+export type AdminVerifyTwoFactorMutationBody = BodyType<TwoFactorVerifyBody>;
+export type AdminVerifyTwoFactorMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - verify TOTP code and refresh 2FA session
+ */
+export const useAdminVerifyTwoFactor = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminVerifyTwoFactor>>,
+    TError,
+    { data: BodyType<TwoFactorVerifyBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminVerifyTwoFactor>>,
+  TError,
+  { data: BodyType<TwoFactorVerifyBody> },
+  TContext
+> => {
+  return useMutation(getAdminVerifyTwoFactorMutationOptions(options));
+};
+
+/**
+ * @summary Admin - clear 2FA cookie
+ */
+export const getAdminTwoFactorLogoutUrl = () => {
+  return `/api/admin/2fa/logout`;
+};
+
+export const adminTwoFactorLogout = async (
+  options?: RequestInit,
+): Promise<SuccessResponse> => {
+  return customFetch<SuccessResponse>(getAdminTwoFactorLogoutUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAdminTwoFactorLogoutMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminTwoFactorLogout>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminTwoFactorLogout>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["adminTwoFactorLogout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminTwoFactorLogout>>,
+    void
+  > = () => {
+    return adminTwoFactorLogout(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminTwoFactorLogoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminTwoFactorLogout>>
+>;
+
+export type AdminTwoFactorLogoutMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Admin - clear 2FA cookie
+ */
+export const useAdminTwoFactorLogout = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminTwoFactorLogout>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminTwoFactorLogout>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getAdminTwoFactorLogoutMutationOptions(options));
+};

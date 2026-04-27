@@ -281,6 +281,113 @@ paths:
                 items:
                   $ref: "#/components/schemas/ActivityItem"
 
+  /admin/documents:
+    get:
+      operationId: adminListAllDocuments
+      tags: [admin]
+      summary: Admin - list all uploaded documents across loans
+      responses:
+        "200":
+          description: Documents list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminDocumentItem"
+
+  /admin/audit-log:
+    get:
+      operationId: adminGetAuditLog
+      tags: [admin]
+      summary: Admin - security audit log (last 100 entries)
+      responses:
+        "200":
+          description: Audit log
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLogItem"
+
+  /admin/2fa/status:
+    get:
+      operationId: adminGetTwoFactorStatus
+      tags: [admin]
+      summary: Admin - check 2FA enrollment + verification state
+      responses:
+        "200":
+          description: 2FA status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFactorStatus"
+
+  /admin/2fa/setup:
+    post:
+      operationId: adminSetupTwoFactor
+      tags: [admin]
+      summary: Admin - generate a new TOTP secret + QR code
+      responses:
+        "200":
+          description: Setup payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TwoFactorSetup"
+
+  /admin/2fa/enable:
+    post:
+      operationId: adminEnableTwoFactor
+      tags: [admin]
+      summary: Admin - confirm TOTP code and enable 2FA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFactorVerifyBody"
+      responses:
+        "200":
+          description: Enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/2fa/verify:
+    post:
+      operationId: adminVerifyTwoFactor
+      tags: [admin]
+      summary: Admin - verify TOTP code and refresh 2FA session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFactorVerifyBody"
+      responses:
+        "200":
+          description: Verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/2fa/logout:
+    post:
+      operationId: adminTwoFactorLogout
+      tags: [admin]
+      summary: Admin - clear 2FA cookie
+      responses:
+        "200":
+          description: Cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   responses:
     Unauthorized:
@@ -672,3 +779,102 @@ components:
         - totalAmountRequested
         - totalAmountAccepted
         - totalDisbursed
+    AdminDocumentItem:
+      type: object
+      properties:
+        id:
+          type: string
+        loanId:
+          type: string
+        filename:
+          type: string
+        contentType:
+          type: string
+        uploadedAt:
+          type: string
+        sizeBytes:
+          type: integer
+        applicantName:
+          type: string
+        applicantEmail:
+          type: string
+        userFullName:
+          type: string
+          nullable: true
+        userEmail:
+          type: string
+          nullable: true
+        loanAmount:
+          type: number
+        loanStatus:
+          type: string
+      required:
+        - id
+        - loanId
+        - filename
+        - contentType
+        - uploadedAt
+        - sizeBytes
+        - applicantName
+        - applicantEmail
+        - loanAmount
+        - loanStatus
+    AuditLogItem:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          nullable: true
+        action:
+          type: string
+        success:
+          type: boolean
+        ipAddress:
+          type: string
+          nullable: true
+        userAgent:
+          type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required: [id, action, success, createdAt]
+    TwoFactorStatus:
+      type: object
+      properties:
+        required:
+          type: boolean
+        enabled:
+          type: boolean
+        verified:
+          type: boolean
+        expiresAt:
+          type: string
+          nullable: true
+      required: [required, enabled, verified]
+    TwoFactorSetup:
+      type: object
+      properties:
+        otpauth:
+          type: string
+        qrCodeDataUrl:
+          type: string
+        secret:
+          type: string
+      required: [otpauth, qrCodeDataUrl, secret]
+    TwoFactorVerifyBody:
+      type: object
+      properties:
+        code:
+          type: string
+      required: [code]
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]

@@ -258,6 +258,53 @@ export interface AdminStats {
   totalDisbursed: number;
 }
 
+export interface AdminDocumentItem {
+  id: string;
+  loanId: string;
+  filename: string;
+  contentType: string;
+  uploadedAt: string;
+  sizeBytes: number;
+  applicantName: string;
+  applicantEmail: string;
+  userFullName?: string | null;
+  userEmail?: string | null;
+  loanAmount: number;
+  loanStatus: string;
+}
+
+export interface AuditLogItem {
+  id: string;
+  email?: string | null;
+  action: string;
+  success: boolean;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  details?: string | null;
+  createdAt: string;
+}
+
+export interface TwoFactorStatus {
+  required: boolean;
+  enabled: boolean;
+  verified: boolean;
+  expiresAt?: string | null;
+}
+
+export interface TwoFactorSetup {
+  otpauth: string;
+  qrCodeDataUrl: string;
+  secret: string;
+}
+
+export interface TwoFactorVerifyBody {
+  code: string;
+}
+
+export interface SuccessResponse {
+  success: boolean;
+}
+
 /**
  * Unauthorized
  */
