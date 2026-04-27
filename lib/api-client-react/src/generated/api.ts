@@ -34,6 +34,7 @@ import type {
   UploadFileInput,
   UserProfile,
   WithdrawInput,
+  Withdrawal,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -502,7 +503,7 @@ export const useUploadSignedContract = <
 };
 
 /**
- * @summary Withdraw available loan funds (simulation)
+ * @summary Request a transfer of available loan funds to a bank account
  */
 export const getWithdrawFundsUrl = (id: string) => {
   return `/api/loans/${id}/withdraw`;
@@ -512,8 +513,8 @@ export const withdrawFunds = async (
   id: string,
   withdrawInput: WithdrawInput,
   options?: RequestInit,
-): Promise<Loan> => {
-  return customFetch<Loan>(getWithdrawFundsUrl(id), {
+): Promise<Withdrawal> => {
+  return customFetch<Withdrawal>(getWithdrawFundsUrl(id), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
@@ -566,7 +567,7 @@ export type WithdrawFundsMutationBody = BodyType<WithdrawInput>;
 export type WithdrawFundsMutationError = ErrorType<BadRequestResponse>;
 
 /**
- * @summary Withdraw available loan funds (simulation)
+ * @summary Request a transfer of available loan funds to a bank account
  */
 export const useWithdrawFunds = <
   TError = ErrorType<BadRequestResponse>,
@@ -587,6 +588,81 @@ export const useWithdrawFunds = <
 > => {
   return useMutation(getWithdrawFundsMutationOptions(options));
 };
+
+/**
+ * @summary List all my withdrawals across loans
+ */
+export const getListMyWithdrawalsUrl = () => {
+  return `/api/withdrawals`;
+};
+
+export const listMyWithdrawals = async (
+  options?: RequestInit,
+): Promise<Withdrawal[]> => {
+  return customFetch<Withdrawal[]>(getListMyWithdrawalsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMyWithdrawalsQueryKey = () => {
+  return [`/api/withdrawals`] as const;
+};
+
+export const getListMyWithdrawalsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMyWithdrawals>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyWithdrawals>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListMyWithdrawalsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMyWithdrawals>>
+  > = ({ signal }) => listMyWithdrawals({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMyWithdrawals>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMyWithdrawalsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMyWithdrawals>>
+>;
+export type ListMyWithdrawalsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all my withdrawals across loans
+ */
+
+export function useListMyWithdrawals<
+  TData = Awaited<ReturnType<typeof listMyWithdrawals>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listMyWithdrawals>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMyWithdrawalsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Admin - list all loan applications

@@ -124,6 +124,43 @@ export interface TimelineEvent {
   createdAt: string;
 }
 
+export type WithdrawalType =
+  (typeof WithdrawalType)[keyof typeof WithdrawalType];
+
+export const WithdrawalType = {
+  INSTANT: "INSTANT",
+  CLASSIQUE: "CLASSIQUE",
+} as const;
+
+export type WithdrawalStatus =
+  (typeof WithdrawalStatus)[keyof typeof WithdrawalStatus];
+
+export const WithdrawalStatus = {
+  PROGRAMME: "PROGRAMME",
+  EN_COURS: "EN_COURS",
+  EXECUTE: "EXECUTE",
+  ECHOUE: "ECHOUE",
+} as const;
+
+export interface Withdrawal {
+  id: string;
+  loanId: string;
+  amount: number;
+  fee: number;
+  type: WithdrawalType;
+  status: WithdrawalStatus;
+  beneficiaryName: string;
+  iban: string;
+  bic: string;
+  /** @nullable */
+  reference: string | null;
+  /** @nullable */
+  scheduledFor: string | null;
+  /** @nullable */
+  executedAt: string | null;
+  createdAt: string;
+}
+
 export type LoanDetail = Loan & {
   documents: UploadedDocumentRef[];
   /** @nullable */
@@ -131,6 +168,7 @@ export type LoanDetail = Loan & {
   /** @nullable */
   signedContract: LoanDetailSignedContract;
   timeline: TimelineEvent[];
+  withdrawals: Withdrawal[];
 };
 
 export type AdminLoan = Loan & {
@@ -181,6 +219,20 @@ export interface UploadFileInput {
 export interface WithdrawInput {
   /** @minimum 1 */
   amount: number;
+  type: WithdrawalType;
+  /** @minLength 2 */
+  beneficiaryName: string;
+  /** @minLength 14 */
+  iban: string;
+  /** @minLength 8 */
+  bic: string;
+  /** @nullable */
+  reference?: string | null;
+  /**
+   * ISO date for classic scheduled transfer (optional)
+   * @nullable
+   */
+  scheduledFor?: string | null;
 }
 
 export interface ActivityItem {

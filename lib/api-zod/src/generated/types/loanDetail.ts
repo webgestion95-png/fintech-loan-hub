@@ -10,6 +10,7 @@ import type { LoanDetailGeneratedContract } from "./loanDetailGeneratedContract"
 import type { LoanDetailSignedContract } from "./loanDetailSignedContract";
 import type { TimelineEvent } from "./timelineEvent";
 import type { UploadedDocumentRef } from "./uploadedDocumentRef";
+import type { Withdrawal } from "./withdrawal";
 
 export type LoanDetail = Loan & {
   documents: UploadedDocumentRef[];
@@ -18,4 +19,5 @@ export type LoanDetail = Loan & {
   /** @nullable */
   signedContract: LoanDetailSignedContract;
   timeline: TimelineEvent[];
+  withdrawals: Withdrawal[];
 };

@@ -16,12 +16,14 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-            <svg width="120" height="24" viewBox="0 0 200 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary">
-              <path d="M12 28L20 12L28 28H12Z" fill="currentColor"/>
-              <path d="M20 28C24.4183 28 28 24.4183 28 20C28 15.5817 24.4183 12 20 12C15.5817 12 12 15.5817 12 20C12 24.4183 15.5817 28 20 28Z" fill="currentColor" fillOpacity="0.3"/>
-              <text x="38" y="27" fontFamily="Georgia, serif" fontSize="22" fontWeight="bold" fill="currentColor">LoanFlow</text>
-            </svg>
+          <Link href="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
+            <span className="h-8 w-8 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center shadow-md shadow-accent/30">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 17L9 11L13 15L21 7" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15 7H21V13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+            <span className="font-serif text-xl font-medium tracking-tight text-foreground">LoanFlow</span>
           </Link>
 
           <Show when="signed-in">

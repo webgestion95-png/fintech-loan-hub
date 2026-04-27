@@ -32,4 +32,7 @@ export * from "./uploadedDocumentRef";
 export * from "./uploadFileInput";
 export * from "./userProfile";
 export * from "./userRole";
+export * from "./withdrawal";
+export * from "./withdrawalStatus";
+export * from "./withdrawalType";
 export * from "./withdrawInput";

@@ -6,6 +6,8 @@ import {
   loanDocumentsTable,
   contractsTable,
   timelineEventsTable,
+  withdrawalsTable,
+  type Withdrawal,
 } from "@workspace/db";
 import {
   CreateLoanBody,
@@ -17,8 +19,26 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth } from "../middlewares/auth";
 import { serializeLoan } from "../lib/loanSerializer";
-import { sendEmail, EMAIL_TEMPLATES } from "../lib/email";
+import { sendEmail } from "../lib/email";
 import { ensureLifecycleAdvanced } from "../lib/loanLifecycle";
+
+function serializeWithdrawal(w: Withdrawal) {
+  return {
+    id: w.id,
+    loanId: w.loanId,
+    amount: Number(w.amount),
+    fee: Number(w.fee),
+    type: w.type,
+    status: w.status,
+    beneficiaryName: w.beneficiaryName,
+    iban: w.iban,
+    bic: w.bic,
+    reference: w.reference,
+    scheduledFor: w.scheduledFor ? w.scheduledFor.toISOString() : null,
+    executedAt: w.executedAt ? w.executedAt.toISOString() : null,
+    createdAt: w.createdAt.toISOString(),
+  };
+}
 
 const router: IRouter = Router();
 
@@ -103,6 +123,11 @@ router.get("/loans/:id", requireAuth, async (req, res): Promise<void> => {
     .from(timelineEventsTable)
     .where(eq(timelineEventsTable.loanId, loan.id))
     .orderBy(desc(timelineEventsTable.createdAt));
+  const withdrawals = await db
+    .select()
+    .from(withdrawalsTable)
+    .where(eq(withdrawalsTable.loanId, loan.id))
+    .orderBy(desc(withdrawalsTable.createdAt));
   const generated = contracts.find((c) => c.kind === "GENERATED") ?? null;
   const signed = contracts.find((c) => c.kind === "SIGNED") ?? null;
   res.json({
@@ -133,7 +158,18 @@ router.get("/loans/:id", requireAuth, async (req, res): Promise<void> => {
       message: e.message,
       createdAt: e.createdAt.toISOString(),
     })),
+    withdrawals: withdrawals.map(serializeWithdrawal),
   });
+});
+
+router.get("/withdrawals", requireAuth, async (req, res): Promise<void> => {
+  const user = req.currentUser!;
+  const rows = await db
+    .select()
+    .from(withdrawalsTable)
+    .where(eq(withdrawalsTable.userId, user.id))
+    .orderBy(desc(withdrawalsTable.createdAt));
+  res.json(rows.map(serializeWithdrawal));
 });
 
 router.post(
@@ -220,24 +256,75 @@ router.post("/loans/:id/withdraw", requireAuth, async (req, res): Promise<void> 
     res.status(400).json({ error: `Montant supérieur au solde disponible (${remaining.toFixed(2)} €)` });
     return;
   }
+
+  const ibanClean = body.data.iban.replace(/\s+/g, "").toUpperCase();
+  const bicClean = body.data.bic.replace(/\s+/g, "").toUpperCase();
+  if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{10,30}$/.test(ibanClean)) {
+    res.status(400).json({ error: "IBAN invalide" });
+    return;
+  }
+  if (!/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bicClean)) {
+    res.status(400).json({ error: "BIC invalide" });
+    return;
+  }
+
+  const isInstant = body.data.type === "INSTANT";
+  const fee = isInstant ? Math.max(1, Math.round(body.data.amount * 0.001 * 100) / 100) : 0;
+  const scheduledFor =
+    body.data.scheduledFor && body.data.type === "CLASSIQUE"
+      ? new Date(body.data.scheduledFor)
+      : null;
+  const status: "PROGRAMME" | "EN_COURS" | "EXECUTE" =
+    scheduledFor && scheduledFor.getTime() > Date.now() + 60_000
+      ? "PROGRAMME"
+      : isInstant
+      ? "EXECUTE"
+      : "EN_COURS";
+  const executedAt = status === "EXECUTE" ? new Date() : null;
+
   const newWithdrawn = (already + body.data.amount).toString();
-  const [updated] = await db
+  await db
     .update(loansTable)
     .set({ withdrawnAmount: newWithdrawn, updatedAt: new Date() })
-    .where(eq(loansTable.id, loan.id))
+    .where(eq(loansTable.id, loan.id));
+
+  const [withdrawal] = await db
+    .insert(withdrawalsTable)
+    .values({
+      loanId: loan.id,
+      userId: user.id,
+      amount: body.data.amount.toString(),
+      fee: fee.toString(),
+      type: body.data.type,
+      status,
+      beneficiaryName: body.data.beneficiaryName,
+      iban: ibanClean,
+      bic: bicClean,
+      reference: body.data.reference ?? null,
+      scheduledFor,
+      executedAt,
+    })
     .returning();
+
+  const typeLabel = isInstant ? "instantané" : "classique";
+  const statusLabel =
+    status === "PROGRAMME"
+      ? `programmé pour le ${scheduledFor!.toLocaleDateString("fr-FR")}`
+      : status === "EXECUTE"
+      ? "exécuté"
+      : "en cours d'exécution";
   await db.insert(timelineEventsTable).values({
     loanId: loan.id,
     kind: "WITHDRAWAL",
-    message: `Retrait de ${body.data.amount.toFixed(2)} € effectué`,
+    message: `Virement ${typeLabel} de ${body.data.amount.toFixed(2)} € vers ${body.data.beneficiaryName} (${ibanClean.slice(0, 4)}…${ibanClean.slice(-4)}) ${statusLabel}`,
   });
   void sendEmail({
     to: loan.applicantEmail,
-    subject: "Retrait effectué",
-    text: `Bonjour ${loan.applicantName},\n\nUn retrait de ${body.data.amount.toFixed(2)} € a bien été effectué depuis votre prêt LoanFlow.\n\nL'équipe LoanFlow`,
+    subject: "Demande de virement enregistrée",
+    text: `Bonjour ${loan.applicantName},\n\nVotre demande de virement ${typeLabel} d'un montant de ${body.data.amount.toFixed(2)} € vers ${body.data.beneficiaryName} a bien été enregistrée et est ${statusLabel}.\n\nL'équipe LoanFlow`,
     kind: "FUNDS_AVAILABLE",
   });
-  res.json(serializeLoan(updated!));
+  res.json(serializeWithdrawal(withdrawal!));
 });
 
 router.get("/loans/:id/contract.pdf", requireAuth, async (req, res): Promise<void> => {

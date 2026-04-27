@@ -5,8 +5,23 @@
  * LoanFlow API
  * OpenAPI spec version: 0.1.0
  */
+import type { WithdrawalType } from "./withdrawalType";
 
 export interface WithdrawInput {
   /** @minimum 1 */
   amount: number;
+  type: WithdrawalType;
+  /** @minLength 2 */
+  beneficiaryName: string;
+  /** @minLength 14 */
+  iban: string;
+  /** @minLength 8 */
+  bic: string;
+  /** @nullable */
+  reference?: string | null;
+  /**
+   * ISO date for classic scheduled transfer (optional)
+   * @nullable
+   */
+  scheduledFor?: string | null;
 }

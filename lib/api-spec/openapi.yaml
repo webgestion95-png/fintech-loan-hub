@@ -130,7 +130,7 @@ paths:
     post:
       operationId: withdrawFunds
       tags: [wallet]
-      summary: Withdraw available loan funds (simulation)
+      summary: Request a transfer of available loan funds to a bank account
       parameters:
         - in: path
           name: id
@@ -145,13 +145,28 @@ paths:
               $ref: "#/components/schemas/WithdrawInput"
       responses:
         "200":
-          description: Updated loan
+          description: Created withdrawal
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Loan"
+                $ref: "#/components/schemas/Withdrawal"
         "400":
           $ref: "#/components/responses/BadRequest"
+
+  /withdrawals:
+    get:
+      operationId: listMyWithdrawals
+      tags: [wallet]
+      summary: List all my withdrawals across loans
+      responses:
+        "200":
+          description: Withdrawals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Withdrawal"
 
   /admin/loans:
     get:
@@ -469,7 +484,11 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/TimelineEvent"
-          required: [documents, generatedContract, signedContract, timeline]
+            withdrawals:
+              type: array
+              items:
+                $ref: "#/components/schemas/Withdrawal"
+          required: [documents, generatedContract, signedContract, timeline, withdrawals]
     AdminLoan:
       allOf:
         - $ref: "#/components/schemas/Loan"
@@ -516,13 +535,78 @@ components:
         dataBase64:
           type: string
       required: [filename, contentType, dataBase64]
+    WithdrawalType:
+      type: string
+      enum: [INSTANT, CLASSIQUE]
+    WithdrawalStatus:
+      type: string
+      enum: [PROGRAMME, EN_COURS, EXECUTE, ECHOUE]
     WithdrawInput:
       type: object
       properties:
         amount:
           type: number
           minimum: 1
-      required: [amount]
+        type:
+          $ref: "#/components/schemas/WithdrawalType"
+        beneficiaryName:
+          type: string
+          minLength: 2
+        iban:
+          type: string
+          minLength: 14
+        bic:
+          type: string
+          minLength: 8
+        reference:
+          type: ["string", "null"]
+        scheduledFor:
+          type: ["string", "null"]
+          description: ISO date for classic scheduled transfer (optional)
+      required: [amount, type, beneficiaryName, iban, bic]
+    Withdrawal:
+      type: object
+      properties:
+        id:
+          type: string
+        loanId:
+          type: string
+        amount:
+          type: number
+        fee:
+          type: number
+        type:
+          $ref: "#/components/schemas/WithdrawalType"
+        status:
+          $ref: "#/components/schemas/WithdrawalStatus"
+        beneficiaryName:
+          type: string
+        iban:
+          type: string
+        bic:
+          type: string
+        reference:
+          type: ["string", "null"]
+        scheduledFor:
+          type: ["string", "null"]
+        executedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required:
+        - id
+        - loanId
+        - amount
+        - fee
+        - type
+        - status
+        - beneficiaryName
+        - iban
+        - bic
+        - reference
+        - scheduledFor
+        - executedAt
+        - createdAt
     TimelineEvent:
       type: object
       properties:

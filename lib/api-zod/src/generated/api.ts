@@ -153,6 +153,23 @@ export const GetLoanResponse = zod
           createdAt: zod.string(),
         }),
       ),
+      withdrawals: zod.array(
+        zod.object({
+          id: zod.string(),
+          loanId: zod.string(),
+          amount: zod.number(),
+          fee: zod.number(),
+          type: zod.enum(["INSTANT", "CLASSIQUE"]),
+          status: zod.enum(["PROGRAMME", "EN_COURS", "EXECUTE", "ECHOUE"]),
+          beneficiaryName: zod.string(),
+          iban: zod.string(),
+          bic: zod.string(),
+          reference: zod.string().nullable(),
+          scheduledFor: zod.string().nullable(),
+          executedAt: zod.string().nullable(),
+          createdAt: zod.string(),
+        }),
+      ),
     }),
   );
 
@@ -198,43 +215,68 @@ export const UploadSignedContractResponse = zod.object({
 });
 
 /**
- * @summary Withdraw available loan funds (simulation)
+ * @summary Request a transfer of available loan funds to a bank account
  */
 export const WithdrawFundsParams = zod.object({
   id: zod.coerce.string(),
 });
 
+export const withdrawFundsBodyBeneficiaryNameMin = 2;
+
+export const withdrawFundsBodyIbanMin = 14;
+
+export const withdrawFundsBodyBicMin = 8;
+
 export const WithdrawFundsBody = zod.object({
   amount: zod.number().min(1),
+  type: zod.enum(["INSTANT", "CLASSIQUE"]),
+  beneficiaryName: zod.string().min(withdrawFundsBodyBeneficiaryNameMin),
+  iban: zod.string().min(withdrawFundsBodyIbanMin),
+  bic: zod.string().min(withdrawFundsBodyBicMin),
+  reference: zod.string().nullish(),
+  scheduledFor: zod
+    .string()
+    .nullish()
+    .describe("ISO date for classic scheduled transfer (optional)"),
 });
 
 export const WithdrawFundsResponse = zod.object({
   id: zod.string(),
-  applicantName: zod.string(),
-  applicantEmail: zod.string(),
+  loanId: zod.string(),
   amount: zod.number(),
-  durationMonths: zod.number(),
-  monthlyIncome: zod.number(),
-  purpose: zod.string().nullable(),
-  status: zod.enum([
-    "EN_ATTENTE",
-    "ACCEPTE",
-    "REFUSE",
-    "CONTRAT_ENVOYE",
-    "CONTRAT_SIGNE",
-    "EN_TRAITEMENT",
-    "FONDS_DISPONIBLES",
-  ]),
-  decisionAt: zod.string().nullable(),
-  contractSignedAt: zod.string().nullable(),
-  fundsAvailableAt: zod.string().nullable(),
-  processingUntil: zod.string().nullable(),
-  withdrawnAmount: zod.number(),
-  availableBalance: zod.number(),
-  adminNote: zod.string().nullable(),
+  fee: zod.number(),
+  type: zod.enum(["INSTANT", "CLASSIQUE"]),
+  status: zod.enum(["PROGRAMME", "EN_COURS", "EXECUTE", "ECHOUE"]),
+  beneficiaryName: zod.string(),
+  iban: zod.string(),
+  bic: zod.string(),
+  reference: zod.string().nullable(),
+  scheduledFor: zod.string().nullable(),
+  executedAt: zod.string().nullable(),
   createdAt: zod.string(),
-  updatedAt: zod.string(),
 });
+
+/**
+ * @summary List all my withdrawals across loans
+ */
+export const ListMyWithdrawalsResponseItem = zod.object({
+  id: zod.string(),
+  loanId: zod.string(),
+  amount: zod.number(),
+  fee: zod.number(),
+  type: zod.enum(["INSTANT", "CLASSIQUE"]),
+  status: zod.enum(["PROGRAMME", "EN_COURS", "EXECUTE", "ECHOUE"]),
+  beneficiaryName: zod.string(),
+  iban: zod.string(),
+  bic: zod.string(),
+  reference: zod.string().nullable(),
+  scheduledFor: zod.string().nullable(),
+  executedAt: zod.string().nullable(),
+  createdAt: zod.string(),
+});
+export const ListMyWithdrawalsResponse = zod.array(
+  ListMyWithdrawalsResponseItem,
+);
 
 /**
  * @summary Admin - list all loan applications
@@ -336,6 +378,23 @@ export const AdminGetLoanResponse = zod
           id: zod.string(),
           kind: zod.string(),
           message: zod.string(),
+          createdAt: zod.string(),
+        }),
+      ),
+      withdrawals: zod.array(
+        zod.object({
+          id: zod.string(),
+          loanId: zod.string(),
+          amount: zod.number(),
+          fee: zod.number(),
+          type: zod.enum(["INSTANT", "CLASSIQUE"]),
+          status: zod.enum(["PROGRAMME", "EN_COURS", "EXECUTE", "ECHOUE"]),
+          beneficiaryName: zod.string(),
+          iban: zod.string(),
+          bic: zod.string(),
+          reference: zod.string().nullable(),
+          scheduledFor: zod.string().nullable(),
+          executedAt: zod.string().nullable(),
           createdAt: zod.string(),
         }),
       ),

@@ -26,11 +26,22 @@ export function formatDateTime(dateStr: string) {
 }
 
 export const statusMap: Record<string, { label: string; color: string }> = {
-  EN_ATTENTE: { label: "En attente", color: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  ACCEPTE: { label: "Acceptée", color: "bg-emerald-100 text-emerald-800 border-emerald-200" },
-  REFUSE: { label: "Refusée", color: "bg-red-100 text-red-800 border-red-200" },
-  CONTRAT_ENVOYE: { label: "Contrat envoyé", color: "bg-blue-100 text-blue-800 border-blue-200" },
-  CONTRAT_SIGNE: { label: "Contrat signé", color: "bg-indigo-100 text-indigo-800 border-indigo-200" },
-  EN_TRAITEMENT: { label: "En traitement (72h)", color: "bg-purple-100 text-purple-800 border-purple-200" },
-  FONDS_DISPONIBLES: { label: "Fonds disponibles", color: "bg-green-100 text-green-800 border-green-200" },
+  EN_ATTENTE: { label: "En attente", color: "bg-amber-50 text-amber-800 border-amber-200" },
+  ACCEPTE: { label: "Acceptée", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+  REFUSE: { label: "Refusée", color: "bg-rose-50 text-rose-700 border-rose-200" },
+  CONTRAT_ENVOYE: { label: "Contrat envoyé", color: "bg-sky-50 text-sky-700 border-sky-200" },
+  CONTRAT_SIGNE: { label: "Contrat signé", color: "bg-indigo-50 text-indigo-700 border-indigo-200" },
+  EN_TRAITEMENT: { label: "En traitement (72h)", color: "bg-amber-50 text-amber-800 border-amber-200" },
+  FONDS_DISPONIBLES: { label: "Fonds disponibles", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
 };
+
+export function maskIban(iban: string) {
+  const clean = iban.replace(/\s+/g, "");
+  if (clean.length <= 8) return clean;
+  return `${clean.slice(0, 4)} •••• •••• ${clean.slice(-4)}`;
+}
+
+export function formatIban(iban: string) {
+  const clean = iban.replace(/\s+/g, "").toUpperCase();
+  return clean.match(/.{1,4}/g)?.join(" ") ?? clean;
+}
