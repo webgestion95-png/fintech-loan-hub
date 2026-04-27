@@ -17,13 +17,14 @@ const ADMIN_EMAILS = (process.env["ADMIN_EMAILS"] ?? "")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
 
-export async function ensureUser(clerkUserId: string): Promise<User> {
-  const existing = await db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.clerkUserId, clerkUserId));
-  if (existing[0]) return existing[0];
+function computeRole(email: string, publicMetadata: unknown): "ADMIN" | "USER" {
+  const metaRole = (publicMetadata as { role?: string } | undefined)?.role;
+  if (ADMIN_EMAILS.includes(email.toLowerCase())) return "ADMIN";
+  if (metaRole === "ADMIN") return "ADMIN";
+  return "USER";
+}
 
+export async function ensureUser(clerkUserId: string): Promise<User> {
   const clerkUser = await clerkClient.users.getUser(clerkUserId);
   const email =
     clerkUser.primaryEmailAddress?.emailAddress ??
@@ -31,9 +32,30 @@ export async function ensureUser(clerkUserId: string): Promise<User> {
     "";
   const fullName =
     [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || null;
-  const isAdmin =
-    ADMIN_EMAILS.includes(email.toLowerCase()) ||
-    (clerkUser.publicMetadata as { role?: string } | undefined)?.role === "ADMIN";
+  const expectedRole = computeRole(email, clerkUser.publicMetadata);
+
+  const existing = (
+    await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.clerkUserId, clerkUserId))
+  )[0];
+
+  if (existing) {
+    if (
+      existing.role !== expectedRole ||
+      existing.email !== email ||
+      existing.fullName !== fullName
+    ) {
+      const [updated] = await db
+        .update(usersTable)
+        .set({ role: expectedRole, email, fullName })
+        .where(eq(usersTable.clerkUserId, clerkUserId))
+        .returning();
+      return updated!;
+    }
+    return existing;
+  }
 
   const [created] = await db
     .insert(usersTable)
@@ -41,7 +63,7 @@ export async function ensureUser(clerkUserId: string): Promise<User> {
       clerkUserId,
       email,
       fullName,
-      role: isAdmin ? "ADMIN" : "USER",
+      role: expectedRole,
     })
     .returning();
   return created!;

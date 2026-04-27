@@ -23,10 +23,19 @@ timeoutMs = 20000
 
 [userenv.shared]
 VITE_CLERK_PUBLISHABLE_KEY = "pk_test_dmVyaWZpZWQtbXVsbGV0LTcuY2xlcmsuYWNjb3VudHMuZGV2JA"
+ADMIN_EMAILS = "webgestion95@gmail.com"
 
 [[ports]]
 localPort = 8080
 externalPort = 80
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 8082
+externalPort = 3001
 
 [[ports]]
 localPort = 19314
